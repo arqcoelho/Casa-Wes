@@ -1,0 +1,209 @@
+{
+  "title": "casa wes",
+  "panoramas": [
+    {
+      "panofile": "D1.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "isryaXf7Pt",
+          "title": "D1 PARA N1",
+          "position": "-199.60272469157596,95.21923031207005,-332.78217664289883",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N1.jpg"
+            }
+          ],
+          "icon": "SOLPRETO.png"
+        },
+        {
+          "hotspotid": "Ph5naklHUF",
+          "title": "D1 PARA D2",
+          "position": "4.071352249034746,-67.35379661552219,-393.82150828522333",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D2.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        }
+      ]
+    },
+    {
+      "panofile": "D2.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "A498UJaKXq",
+          "title": "D2 PARA D1",
+          "position": "-0.7321632575148631,-248.5656964707491,312.85739259226125",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D1.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        },
+        {
+          "hotspotid": "VWeHgoH6Hn",
+          "title": "D2 PARA N2",
+          "position": "265.26523185860117,-162.67413916720625,250.1632748812594",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N2.jpg"
+            }
+          ],
+          "icon": "SOLPRETO.png"
+        },
+        {
+          "hotspotid": "HvY74xPej2",
+          "title": "D2 PARA D3",
+          "position": "-17.156373956870855,-65.1766678809609,-393.50166861600974",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D3.jpg"
+            }
+          ],
+          "icon": "white.png"
+        }
+      ]
+    },
+    {
+      "panofile": "N1.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "NR5w7n6NlG",
+          "title": "N1 PARA D1",
+          "position": "-197.1091763958168,84.76755260481632,-337.05965588281504",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D1.jpg"
+            }
+          ],
+          "icon": "LUAPRETA.png"
+        },
+        {
+          "hotspotid": "5tOyY5z797",
+          "title": "N1 PARA N2",
+          "position": "5.4407832575590245,-83.62995535413202,-390.47224981444003",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N2.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        }
+      ]
+    },
+    {
+      "panofile": "N2.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "XCDLLr0ff2",
+          "title": "N2 PARA N1",
+          "position": "14.62465267849514,-200.78865588202734,344.7008777061081",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N1.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        },
+        {
+          "hotspotid": "ujOnpAHP0X",
+          "title": "N2 PARA D2",
+          "position": "268.5376198072522,-159.28298474031808,249.15857464633928",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D2.jpg"
+            }
+          ],
+          "icon": "LUAPRETA.png"
+        },
+        {
+          "hotspotid": "7tuh0ongyH",
+          "title": "N2 PARA N3",
+          "position": "-20.68418391451682,-65.14645268062912,-393.3192091171602",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N3.jpg"
+            }
+          ],
+          "icon": "white.png"
+        }
+      ]
+    },
+    {
+      "panofile": "D3.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "esMA0D57ME",
+          "title": "D3 PARA D2",
+          "position": "390.1186587653118,-63.02378783381616,-57.492098367676704",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D2.jpg"
+            }
+          ],
+          "icon": "white.png"
+        },
+        {
+          "hotspotid": "4jteeZagHY",
+          "title": "D3 PARA N3",
+          "position": "-328.9291780241806,-144.75617559002117,173.67822194674983",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N3.jpg"
+            }
+          ],
+          "icon": "SOLPRETO.png"
+        }
+      ]
+    },
+    {
+      "panofile": "N3.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "CVg5lQVXNI",
+          "title": "N3 PARA N2",
+          "position": "389.65263177265825,-68.35286251415134,-53.49254911545742",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N2.jpg"
+            }
+          ],
+          "icon": "white.png"
+        },
+        {
+          "hotspotid": "XEhmSfCt4c",
+          "title": "N3 PARA D3",
+          "position": "-328.7446806874067,-139.33335316763026,178.45223723111008",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D3.jpg"
+            }
+          ],
+          "icon": "LUAPRETA.png"
+        }
+      ]
+    }
+  ],
+  "threedeescenes": [],
+  "settings": {
+    "description": "New 3Sixty Virtual Tour Project",
+    "loadingtext": "Loading...",
+    "firstpanorama": "D1.jpg"
+  }
+}
