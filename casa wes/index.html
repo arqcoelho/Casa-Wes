@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--projecttitle--><title>casa wes</title><!--projecttitle-end-->
+    <!--projectdescription--><meta name="description" content="Project 3Sixty Baru"><!--projectdescription-end-->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width, shrink-to-fit=no">
+    
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    
+    <!-- Insert this line above script imports -->
+    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+    
+    <script src="js/jquery.js"></script>
+    <script src="js/imagedata.js"></script>
+    
+    <!-- Insert this line after script imports -->
+    <script>if (window.module) module = window.module;</script>
+    
+    <style>
+        /* SCROLLBAR STYLING */
+        ::-webkit-scrollbar {
+            width: 0.25em;
+            height: 0.25em;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2c3643; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0d9e59; 
+            transition: background .5s;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00e075; 
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Quicksand', sans-serif;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        
+        #overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        #tmp {
+            position: fixed;
+            top: 0;
+            left: 0; 
+            right: 0;
+            bottom: 0;
+            padding: 3em;
+            background-color: rgba(0,0,0,.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            z-index: 21;
+        }
+        
+        /* --- Elemen UI yang dihilangkan --- */
+        #controls-info,
+        #compass {
+            display: none;
+        }
+        
+        #mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 5;
+            border: 1px solid #eba576;
+			display: none;
+        }
+        
+    </style>
+</head>
+<body id="body">
+    <div id="container"></div>
+    <div id="overlay">Loading...</div>
+    
+    <div id="mode-indicator"><i class="fa fa-picture-o"></i> Panorama Mode</div>
+    <!-- Elemen controls-info dan compass telah dihapus dari sini -->
+    
+    <!--customhtml--><!--customhtml-end-->
+    
+    <div id="tmp">
+        <div style="width: 100%; height: 100%; overflow: hidden; overflow-y: auto; box-sizing: border-box; position: relative;" id="tmpcontent"></div>
+        <div class="mediaclosebutton" onclick="hideTemp()"><i class="fa fa-times-circle"></i></div>
+    </div>
+
+    <div id="loading" class="fullwrapper" style="display: table; width: 100%; height: 100%;">
+        <div style="display: table-cell; vertical-align: middle; text-align: center; color: white; font-size: 30px; padding: 50px;">
+            <!--loadingtext-->Loading...<!--loadingtext-end-->
+            <div id="loadingperc" style="font-size:12px;"></div>
+        </div>
+    </div>
+    
+    <!-- Three.js Core -->
+    <script src="js/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="js/OrbitControls.js"></script>
+    
+    <script>
+        // ============ GLOBAL VARIABLES ============
+        let scene, camera, renderer, controls;
+        let spriteHotspots = [];
+        let panoramaMesh = null;
+        let mode = "panorama"; // 'panorama' or '3d'
+        let threeDSceneObjects = [];
+        let threeDScenes = {};
+        let current3DSceneId = null;
+
+        // Environment variables
+        let skyboxMesh = null;
+        let ambientLight, hemisphereLight, directionalLight, fillLight;
+        // Variabel gridHelper dan axesHelper dihapus karena tidak lagi digunakan
+
+        // Zoom variables
+        let targetFov = 75;
+        let initialFov = 75;
+        let initialPinchDistance = null;
+
+        // DOM elements
+        const overlay = document.getElementById('overlay');
+        const modeIndicator = document.getElementById('mode-indicator');
+        // Referensi ke controls-info dan compass dihapus
+        
+        // Raycasting
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        // Keyboard movement for 3D mode
+        const keys = {};
+        const direction = new THREE.Vector3();
+        const upVector = new THREE.Vector3(0, 1, 0);
+        
+        // Clock for delta time
+        const clock = new THREE.Clock();
+
+        // ============ INITIALIZATION ============
+        init();
+        animate();
+
+        /*initfunction*/
+
+		let currentPanorama = 'D1.jpg';
+		function init() {
+			const container = document.getElementById('container');
+
+			scene = new THREE.Scene();
+
+			camera = new THREE.PerspectiveCamera(targetFov, container.clientWidth / container.clientHeight, 0.1, 1000);
+			camera.position.set(0, 0, 0.1);
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setSize(container.clientWidth, container.clientHeight);
+			container.appendChild(renderer.domElement);
+
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+			controls.enableZoom = true;
+			controls.minDistance = 0.1;
+			controls.maxDistance = 5;
+			controls.enablePan = false;
+			controls.rotateSpeed = -0.3;
+			controls.enableDamping = true;
+			controls.dampingFactor = 0.1;
+
+			const geometry = new THREE.SphereGeometry(500, 60, 40);
+			geometry.scale(-1, 1, 1);
+
+			const texture = new THREE.TextureLoader().load('panoramas/D1.jpg');
+			const material = new THREE.MeshBasicMaterial({ map: texture });
+
+			panoramaMesh = new THREE.Mesh(geometry, material);
+			scene.add(panoramaMesh);
+
+			loadHotspotsFor('D1.jpg');
+
+			window.addEventListener('resize', onWindowResize);
+			renderer.domElement.addEventListener('wheel', onMouseWheel, { passive: false });
+			renderer.domElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+			renderer.domElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+			renderer.domElement.addEventListener('pointermove', onPointerMove, false);
+		}
+		
+/*initfunction-end*/
+
+        // ============ CORE FUNCTIONS ============
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mode === "3d") {
+                // Update mode indicator
+                modeIndicator.innerHTML = '<i class="fa fa-cube"></i> 3D Mode';
+                
+                // Keyboard movement for 3D scenes
+                const speed = 5 * delta;
+                
+                direction.set(0, 0, 0);
+                
+                if (keys["KeyW"]) direction.z -= 1;
+                if (keys["KeyS"]) direction.z += 1;
+                if (keys["KeyA"]) direction.x -= 1;
+                if (keys["KeyD"]) direction.x += 1;
+                if (keys["KeyQ"]) direction.y -= 1; // Down
+                if (keys["KeyE"]) direction.y += 1; // Up
+                
+                if (direction.length() > 0) {
+                    direction.normalize();
+                    
+                    // Transform direction from camera space to world space
+                    const cameraDirection = new THREE.Vector3();
+                    camera.getWorldDirection(cameraDirection);
+                    
+                    const right = new THREE.Vector3().crossVectors(upVector, cameraDirection).normalize();
+                    const up = new THREE.Vector3().crossVectors(cameraDirection, right).normalize();
+                    
+                    const moveVector = new THREE.Vector3()
+                        .addScaledVector(right, -direction.x * speed)
+                        .addScaledVector(up, direction.y * speed)
+                        .addScaledVector(cameraDirection, -direction.z * speed);
+                    
+                    camera.position.add(moveVector);
+                    controls.target.copy(camera.position).add(cameraDirection);
+                }
+                
+                // Update compass - Fungsi ini tidak lagi melakukan apapun karena elemen compass dihilangkan
+                // updateCompass();
+                
+                controls.update();
+            } else {
+                // Panorama mode animation
+                modeIndicator.innerHTML = '<i class="fa fa-picture-o"></i> Panorama Mode';
+                
+                camera.fov += (targetFov - camera.fov) * 0.1;
+                camera.updateProjectionMatrix();
+                
+                // Animate hotspots
+                spriteHotspots.forEach(sprite => {
+                    const currentScale = sprite.scale.x;
+                    const target = sprite.userData.targetScale || 40;
+                    const newScale = THREE.MathUtils.lerp(currentScale, target, 0.1);
+                    sprite.scale.set(newScale, newScale, 1);
+                });
+                
+                controls.update();
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Fungsi updateCompass dikosongkan karena elemennya sudah dihilangkan
+        function updateCompass() {
+            // Kompas tidak lagi digunakan
+        }
+
+        // ============ LIGHTING SETUP ============
+        
+        function createLights() {
+            // Ambient light
+            ambientLight = new THREE.AmbientLight(0x404060);
+            ambientLight.name = "ambientLight";
+            scene.add(ambientLight);
+            
+            // Hemisphere light
+            hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+            hemisphereLight.name = "hemisphereLight";
+            scene.add(hemisphereLight);
+            
+            // Directional light (main light)
+            directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 10, 7);
+            directionalLight.castShadow = true;
+            directionalLight.receiveShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            const d = 15;
+            directionalLight.shadow.camera.left = -d;
+            directionalLight.shadow.camera.right = d;
+            directionalLight.shadow.camera.top = d;
+            directionalLight.shadow.camera.bottom = -d;
+            directionalLight.shadow.camera.near = 1;
+            directionalLight.shadow.camera.far = 25;
+            directionalLight.name = "directionalLight";
+            scene.add(directionalLight);
+            
+            // Fill light
+            fillLight = new THREE.PointLight(0x4466ff, 0.3);
+            fillLight.position.set(-5, 3, 5);
+            fillLight.name = "fillLight";
+            scene.add(fillLight);
+        }
+
+        function configureLights(envSettings) {
+            if (!envSettings) return;
+            
+            if (ambientLight) ambientLight.visible = envSettings.lights?.ambient !== false;
+            if (hemisphereLight) hemisphereLight.visible = envSettings.lights?.hemisphere !== false;
+            if (directionalLight) directionalLight.visible = envSettings.lights?.directional !== false;
+            
+            // Grid dan AxesHelper tidak lagi ditambahkan
+        }
+
+        // ============ ZOOM HANDLERS ============
+        
+        function onMouseWheel(e) {
+            e.preventDefault();
+            targetFov += e.deltaY * 0.05;
+            targetFov = THREE.MathUtils.clamp(targetFov, 30, 100);
+        }
+
+        function handleTouchStart(e) {
+            if (e.touches.length === 2) {
+                const dx = e.touches[0].pageX - e.touches[1].pageX;
+                const dy = e.touches[0].pageY - e.touches[1].pageY;
+                initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+                initialFov = targetFov;
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (e.touches.length === 2 && initialPinchDistance !== null) {
+                e.preventDefault();
+                const dx = e.touches[0].pageX - e.touches[1].pageX;
+                const dy = e.touches[0].pageY - e.touches[1].pageY;
+                const newDistance = Math.sqrt(dx * dx + dy * dy);
+                const zoomFactor = initialPinchDistance / newDistance;
+                targetFov = THREE.MathUtils.clamp(initialFov * zoomFactor, 30, 100);
+            }
+        }
+
+        // ============ HOTSPOT FUNCTIONS ============
+        
+        function loadHotspotsFor(panorama) {
+            clearHotspots();
+            /*panoramas*/
+
+			if (panorama === 'D1.jpg') {
+				addHotspot('images/SOLPRETO.png', new THREE.Vector3(-199.60272469157596, 95.21923031207005, -332.78217664289883), () => {
+		switchPanorama('N1.jpg');
+	});
+	addHotspot('images/chevronforward.png', new THREE.Vector3(4.071352249034746, -67.35379661552219, -393.82150828522333), () => {
+		switchPanorama('D2.jpg');
+	});
+}
+
+			if (panorama === 'D2.jpg') {
+				addHotspot('images/chevronforward.png', new THREE.Vector3(-0.7321632575148631, -248.5656964707491, 312.85739259226125), () => {
+		switchPanorama('D1.jpg');
+	});
+	addHotspot('images/SOLPRETO.png', new THREE.Vector3(265.26523185860117, -162.67413916720625, 250.1632748812594), () => {
+		switchPanorama('N2.jpg');
+	});
+}
+
+			if (panorama === 'N1.jpg') {
+				addHotspot('images/LUAPRETA.png', new THREE.Vector3(-197.1091763958168, 84.76755260481632, -337.05965588281504), () => {
+		switchPanorama('D1.jpg');
+	});
+	addHotspot('images/chevronforward.png', new THREE.Vector3(5.4407832575590245, -83.62995535413202, -390.47224981444003), () => {
+		switchPanorama('N2.jpg');
+	});
+}
+
+			if (panorama === 'N2.jpg') {
+				addHotspot('images/chevronforward.png', new THREE.Vector3(14.62465267849514, -200.78865588202734, 344.7008777061081), () => {
+		switchPanorama('N1.jpg');
+	});
+	addHotspot('images/LUAPRETA.png', new THREE.Vector3(268.5376198072522, -159.28298474031808, 249.15857464633928), () => {
+		switchPanorama('D2.jpg');
+	});
+}
+
+/*panoramas-end*/
+        }
+
+        function switchPanorama(panoramaName) {
+            // Kembalikan panorama sphere jika sedang di 3D mode
+            if (mode === "3d") {
+                switchToPanoramaMode();
+            }
+            
+            overlay.style.pointerEvents = 'auto';
+            overlay.style.opacity = '1';
+            overlay.textContent = 'Loading...';
+
+            const newTexture = new THREE.TextureLoader().load(`panoramas/${panoramaName}`, (tex) => {
+                panoramaMesh.material.map = tex;
+                panoramaMesh.material.needsUpdate = true;
+                currentPanorama = panoramaName;
+                loadHotspotsFor(currentPanorama);
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+            }, (xhr) => {
+                const progress = (xhr.loaded / xhr.total) * 100;
+                overlay.textContent = `Loading... ${progress.toFixed(0)}%`;
+            });
+        }
+
+        function addHotspot(imageUrl, position, onClickCallback) {
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(imageUrl, (texture) => {
+                const material = new THREE.SpriteMaterial({ map: texture });
+                const sprite = new THREE.Sprite(material);
+                sprite.position.copy(position);
+                sprite.scale.set(40, 40, 1);
+                sprite.userData = {
+                    onClick: onClickCallback,
+                    targetScale: 40,
+                    type: 'hotspot'
+                };
+                spriteHotspots.push(sprite);
+                scene.add(sprite);
+            });
+        }
+
+        function clearHotspots() {
+            spriteHotspots.forEach(sprite => scene.remove(sprite));
+            spriteHotspots = [];
+        }
+
+        function onPointerMove(event) {
+            if (mode !== "panorama") return;
+            
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(spriteHotspots);
+
+            spriteHotspots.forEach(sprite => {
+                sprite.userData.targetScale = 40;
+            });
+
+            if (intersects.length > 0) {
+                intersects[0].object.userData.targetScale = 50;
+            }
+        }
+
+        // ============ CLICK HANDLER ============
+        
+        function handleClick(event) {
+            const clientX = event.clientX || (event.changedTouches && event.changedTouches[0].clientX);
+            const clientY = event.clientY || (event.changedTouches && event.changedTouches[0].clientY);
+
+            if (!clientX || !clientY) return;
+
+            const mouseClick = new THREE.Vector2(
+                (clientX / window.innerWidth) * 2 - 1,
+                -(clientY / window.innerHeight) * 2 + 1
+            );
+
+            const clickRaycaster = new THREE.Raycaster();
+            clickRaycaster.setFromCamera(mouseClick, camera);
+            
+            if (mode === "panorama") {
+                // Handle hotspot clicks
+                const intersects = clickRaycaster.intersectObjects(spriteHotspots);
+                if (intersects.length > 0) {
+                    event.preventDefault();
+                    const clicked = intersects[0].object;
+                    if (clicked.userData.onClick) clicked.userData.onClick();
+                }
+            } else {
+                // Handle 3D object clicks
+                const intersects = clickRaycaster.intersectObjects(threeDSceneObjects);
+                if (intersects.length > 0) {
+                    event.preventDefault();
+                    const clickedObject = intersects[0].object;
+                    
+                    // Execute actions from userData
+                    if (clickedObject.userData && clickedObject.userData.actions && clickedObject.userData.actions.length > 0) {
+                        executeActions(clickedObject.userData.actions);
+                    }
+                }
+            }
+        }
+
+        // Add click listeners
+        document.addEventListener('click', handleClick);
+        document.addEventListener('touchend', handleClick);
+
+        // ============ ACTION EXECUTION ============
+        
+        function executeActions(actions) {
+            console.log("Executing actions:", actions);
+            
+            actions.forEach(action => {
+                switch(action.type) {
+                    case 0: // Open Panorama
+                        if (action.target) switchPanorama(action.target);
+                        break;
+                        
+                    case 1: // Show Image
+                        if (action.target) showMedia(1, action.target);
+                        break;
+                        
+                    case 2: // Play Video
+                        if (action.target) showMedia(2, action.target);
+                        break;
+                        
+                    case 3: // Play Audio
+                        if (action.target) showMedia(3, action.target);
+                        break;
+                        
+                    case 4: // Open PDF
+                        if (action.target) showMedia(4, action.target);
+                        break;
+                        
+                    case 5: // Open 3D Scene
+                        if (action.target) {
+                            const sceneId = action.target.startsWith('3dscene:') 
+                                ? action.target.replace('3dscene:', '') 
+                                : action.target;
+                            switchTo3DScene(sceneId);
+                        }
+                        break;
+                        
+                    case 6: // Open URL
+                        if (action.target) window.open(action.target, '_blank');
+                        break;
+                        
+                    case 7: // Execute JavaScript
+                        if (action.target) {
+                            try {
+                                eval(action.target);
+                            } catch(e) {
+                                console.error("Error executing JavaScript action:", e);
+                            }
+                        }
+                        break;
+                        
+                    default:
+                        console.log("Unknown action type:", action.type);
+                }
+            });
+        }
+
+        // ============ MEDIA DISPLAY ============
+        
+        function hideTemp() {
+            $("#tmp").fadeOut();
+            setTimeout(() => $("#tmpcontent").html(""), 1000);
+        }
+        
+        function showMedia(type, content) {
+            switch(type) {
+                case 1:
+                    $("#tmpcontent").html("<img src='"+content+"' style='width: 100%;'>");
+                    break;
+                case 2:
+                    $("#tmpcontent").html("<video controls autoplay style='width: 100%; height: 100%;'><source src='" +content+ "' type='video/mp4'> Your browser does not support the video tag.</video>");
+                    break;
+                case 3:
+                    $("#tmpcontent").html("<audio controls style='width: 100%;'><source src='"+content+"' type='audio/mpeg'>Your browser does not support the audio tag.</audio>");
+                    break;
+                case 4:
+                    $("#tmpcontent").html("<iframe src='pdfjs/web/viewer.html?file=../../"+content+"' style='width: 100%; height: 99%;'></iframe>");
+                    break;
+            }
+            $("#tmp").fadeIn();
+        }
+		
+		
+		// Tambahkan di akhir script, sebelum customjs
+		function toggleLights() {
+			// Debug function untuk cek lighting
+			console.log("Toggling lights for debugging");
+			
+			// Tambah directional light kedua dari arah berbeda
+			const extraLight = new THREE.DirectionalLight(0xffffff, 0.8);
+			extraLight.position.set(-5, 5, 5);
+			scene.add(extraLight);
+			
+			// Tambah point light di dekat cube
+			const pointLight = new THREE.PointLight(0xffaa00, 1, 10);
+			pointLight.position.set(2, 2, 2);
+			scene.add(pointLight);
+			
+			setTimeout(() => {
+				scene.remove(extraLight);
+				scene.remove(pointLight);
+			}, 5000);
+		}
+
+		// Debug shortcut (Ctrl+L) untuk toggle extra lights
+		document.addEventListener('keydown', function(e) {
+			if (e.ctrlKey && e.key === 'l') {
+				e.preventDefault();
+				toggleLights();
+			}
+		});
+
+        // ============ 3D SCENE FUNCTIONS ============
+        
+        function addObjectToScene(objData) {
+			let geometry, material, mesh;
+			
+			// Handle material type (color or texture)
+			const materialType = objData.materialType || 'color';
+			
+			try {
+				if (materialType === 'texture' && objData.texture) {
+					// Load texture
+					const textureLoader = new THREE.TextureLoader();
+					const texturePath = 'images/' + objData.texture;
+					
+					const texture = textureLoader.load(texturePath);
+					
+					// Check if PNG for transparency
+					const isPNG = objData.texture.toLowerCase().endsWith('.png');
+					
+					material = new THREE.MeshStandardMaterial({ 
+						map: texture,
+						transparent: isPNG,
+						emissive: 0x222222,
+						emissiveIntensity: 0.2
+					});
+					
+					console.log("Texture loaded:", texturePath);
+				} else {
+					// Solid color
+					material = new THREE.MeshStandardMaterial({ 
+						color: objData.color || 0xffffff,
+						emissive: 0x222222,
+						emissiveIntensity: 0.1
+					});
+				}
+				
+				// Khusus plane perlu DoubleSide
+				if (objData.type === 'plane') {
+					material.side = THREE.DoubleSide;
+				}
+			} catch(e) {
+				console.error("Error creating material:", e);
+				material = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+			}
+			
+			switch(objData.type) {
+				case 'cube':
+					geometry = new THREE.BoxGeometry(
+						objData.width || 1, 
+						objData.height || 1, 
+						objData.depth || 1
+					);
+					mesh = new THREE.Mesh(geometry, material);
+					break;
+					
+				case 'sphere':
+					geometry = new THREE.SphereGeometry(
+						objData.radius || 0.7, 
+						32, 32
+					);
+					mesh = new THREE.Mesh(geometry, material);
+					break;
+					
+				case 'plane':
+					geometry = new THREE.PlaneGeometry(
+						objData.width || 50, 
+						objData.height || 50
+					);
+					mesh = new THREE.Mesh(geometry, material);
+					break;
+					
+				default:
+					return null;
+			}
+			
+			if (mesh) {
+				mesh.position.set(
+					objData.posX || 0, 
+					objData.posY || 0, 
+					objData.posZ || 0
+				);
+				
+				mesh.rotation.set(
+					(objData.rotX || 0) * Math.PI / 180,
+					(objData.rotY || 0) * Math.PI / 180,
+					(objData.rotZ || 0) * Math.PI / 180
+				);
+				
+				mesh.scale.set(
+					objData.scaleX || 1, 
+					objData.scaleY || 1, 
+					objData.scaleZ || 1
+				);
+				
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+				
+				// Store actions and metadata in userData
+				mesh.userData = {
+					actions: objData.actions || [],
+					type: objData.type,
+					name: objData.name || objData.type,
+					id: objData.id || 'obj_' + Date.now(),
+					originalData: objData
+				};
+				
+				return mesh;
+			}
+			
+			return null;
+		}
+
+        function clear3DScene() {
+			// Hapus semua 3D objects
+			threeDSceneObjects.forEach(obj => scene.remove(obj));
+			threeDSceneObjects = [];
+			
+			// Hapus grid dan axes (tidak lagi diperlukan, tapi dibiarkan untuk jaga-jaga jika ada kode lama)
+			// Variabel gridHelper dan axesHelper tidak lagi digunakan
+		}
+
+        function switchToPanoramaMode() {
+			mode = "panorama";
+			current3DSceneId = null;
+			
+			// Hapus skybox 3D
+			if (skyboxMesh) {
+				scene.remove(skyboxMesh);
+				skyboxMesh = null;
+			}
+			
+			// Reset background
+			scene.background = null;
+			
+			// Show panorama sphere
+			if (!scene.children.includes(panoramaMesh)) {
+				scene.add(panoramaMesh);
+			}
+			
+			// Remove 3D objects
+			clear3DScene();
+			
+			// Reset controls for panorama
+			controls.enablePan = false;
+			controls.minDistance = 0.1;
+			controls.maxDistance = 5;
+			controls.target.set(0, 0, 0);
+			
+			// Show hotspots
+			loadHotspotsFor(currentPanorama);
+			
+			// Update UI
+			// controlsInfo.style.display = 'none'; // Elemen sudah dihilangkan
+			
+			// Reset camera
+			camera.position.set(0, 0, 0.1);
+		}
+        
+        function switchTo3DScene(sceneId) {
+			console.log("Switching to 3D scene:", sceneId);
+			
+			const sceneData = threeDScenes[sceneId];
+			
+			if (!sceneData) {
+				console.error("3D Scene not found:", sceneId);
+				return;
+			}
+			
+			mode = "3d";
+			current3DSceneId = sceneId;
+			
+			// Hapus panorama sphere dari scene
+			if (panoramaMesh && scene.children.includes(panoramaMesh)) {
+				scene.remove(panoramaMesh);
+			}
+			
+			// Hapus semua hotspot
+			clearHotspots();
+			
+			// Hapus semua 3D objects yang ada
+			clear3DScene();
+			
+			// Hapus skybox mesh jika ada (kita tidak akan pakai mesh lagi)
+			if (skyboxMesh) {
+				scene.remove(skyboxMesh);
+				skyboxMesh = null;
+			}
+			
+			// Reset background ke null dulu
+			scene.background = null;
+			
+			// Reset lights
+			const lightsToRemove = [];
+			scene.children.forEach(obj => {
+				if (obj.isLight) lightsToRemove.push(obj);
+			});
+			lightsToRemove.forEach(light => scene.remove(light));
+			
+			// Buat ulang lights
+			ambientLight = new THREE.AmbientLight(0x404060);
+			scene.add(ambientLight);
+			
+			hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+			scene.add(hemisphereLight);
+			
+			directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+			directionalLight.position.set(5, 10, 7);
+			directionalLight.castShadow = true;
+			directionalLight.receiveShadow = true;
+			scene.add(directionalLight);
+			
+			const backLight = new THREE.PointLight(0x4466ff, 0.5);
+			backLight.position.set(-5, 3, -5);
+			scene.add(backLight);
+			
+			// Set environment settings
+			if (sceneData.environment) {
+				// Menggunakan Scene.background dengan CubeTexture atau Texture
+				if (sceneData.environment.skyboxType === 'panorama' && sceneData.environment.skyboxPanorama) {
+					const panoramaPath = 'panoramas/' + sceneData.environment.skyboxPanorama;
+					
+					// Load texture dan set sebagai background
+					const textureLoader = new THREE.TextureLoader();
+					textureLoader.load(panoramaPath, (texture) => {
+						// Untuk panorama equirectangular, kita perlu set mapping
+						texture.mapping = THREE.EquirectangularRefractionMapping;
+						
+						// Set sebagai scene background
+						scene.background = texture;
+						
+						// Set environment map untuk refleksi (optional)
+						scene.environment = texture;
+						
+						console.log("✅ Skybox set as scene background:", panoramaPath);
+					});
+					
+				} else if (sceneData.environment.skyboxType === 'color' && sceneData.environment.skyboxColor) {
+					scene.background = new THREE.Color(sceneData.environment.skyboxColor);
+				} else {
+					scene.background = new THREE.Color(0x111122);
+				}
+				
+				// Grid dan AxesHelper tidak lagi ditambahkan di sini
+				
+			} else {
+				scene.background = new THREE.Color(0x111122);
+			}
+			
+			// Set camera position
+			if (sceneData.cameraPos) {
+				camera.position.set(
+					sceneData.cameraPos.x, 
+					sceneData.cameraPos.y, 
+					sceneData.cameraPos.z
+				);
+				controls.target.set(0, 1, 0);
+			} else {
+				camera.position.set(5, 3, 8);
+				controls.target.set(0, 1, 0);
+			}
+			
+			// Set controls untuk 3D mode
+			controls.enablePan = true;
+			controls.maxDistance = 200;
+			controls.minDistance = 1;
+			
+			// Add objects from scene data
+			if (sceneData.objects && sceneData.objects.length > 0) {
+				sceneData.objects.forEach(objData => {
+					const mesh = addObjectToScene(objData);
+					if (mesh) {
+						scene.add(mesh);
+						threeDSceneObjects.push(mesh);
+					}
+				});
+			}
+			
+			// Update UI
+			// controlsInfo.style.display = 'block'; // Elemen sudah dihilangkan
+			overlay.style.opacity = '0';
+			overlay.style.pointerEvents = 'none';
+			
+			console.log("3D scene ready");
+		}
+
+
+		
+		// Fungsi debug untuk cek skybox
+		function debugSkybox() {
+			console.log("=== SKYBOX DEBUG INFO ===");
+			console.log("Skybox exists:", !!skyboxMesh);
+			if (skyboxMesh) {
+				console.log("Skybox position:", skyboxMesh.position);
+				console.log("Skybox scale:", skyboxMesh.scale);
+				console.log("Material side:", skyboxMesh.material.side);
+				console.log("Material depthWrite:", skyboxMesh.material.depthWrite);
+				console.log("Render order:", skyboxMesh.renderOrder);
+				console.log("Frustum culled:", skyboxMesh.frustumCulled);
+				console.log("Material map:", skyboxMesh.material.map ? "✅ Texture loaded" : "❌ No texture");
+			}
+			console.log("Camera position:", camera.position);
+			console.log("Mode:", mode);
+			console.log("Current 3D Scene ID:", current3DSceneId);
+		}
+
+		// Panggil setelah switchTo3DScene
+		setTimeout(debugSkybox, 2000);
+
+
+        // ============ DEBUG FUNCTIONS ============
+        
+        function inspect3DObjects() {
+            console.log("=== 3D Objects Debug Info ===");
+            console.log("Mode:", mode);
+            console.log("Current 3D Scene ID:", current3DSceneId);
+            console.log("3D Objects in scene:", threeDSceneObjects.length);
+            
+            if (current3DSceneId && threeDScenes[current3DSceneId]) {
+                console.log("Scene name:", threeDScenes[current3DSceneId].name);
+                console.log("Scene objects in data:", threeDScenes[current3DSceneId].objects?.length || 0);
+            }
+            
+            threeDSceneObjects.forEach((obj, index) => {
+                console.log(`Object ${index}:`, {
+                    name: obj.userData.name,
+                    type: obj.userData.type,
+                    position: obj.position,
+                    rotation: obj.rotation,
+                    scale: obj.scale,
+                    actions: obj.userData.actions || [],
+                    material: obj.material ? (obj.material.color ? '#' + obj.material.color.getHexString() : 'texture') : 'unknown'
+                });
+            });
+            
+            console.log("All 3D Scenes data:", threeDScenes);
+        }
+
+        // Debug shortcut (Ctrl+I)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'i') {
+                e.preventDefault();
+                inspect3DObjects();
+            }
+        });
+
+        // ============ CUSTOM JS AREA ============
+        /*customjs*/
+
+/*customjs-end*/
+
+        // ============ 3D SCENES DATA ============
+        /*threedeescenes-data*/
+// 3D Scenes Data
+threeDScenes = {};
+
+/*threedeescenes-data-end*/
+        
+        // ============ INITIAL MODE ============
+        mode = "panorama";
+    </script>
+</body>
+</html>

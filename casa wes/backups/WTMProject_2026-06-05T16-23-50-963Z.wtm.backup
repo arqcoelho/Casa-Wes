@@ -1,0 +1,127 @@
+{
+  "title": "casa wes",
+  "panoramas": [
+    {
+      "panofile": "D1.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "isryaXf7Pt",
+          "title": "D1 PARA N1",
+          "position": "-199.60272469157596,95.21923031207005,-332.78217664289883",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N1.jpg"
+            }
+          ],
+          "icon": "SOLPRETO.png"
+        },
+        {
+          "hotspotid": "Ph5naklHUF",
+          "title": "D1 PARA D2",
+          "position": "4.071352249034746,-67.35379661552219,-393.82150828522333",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D2.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        }
+      ]
+    },
+    {
+      "panofile": "D2.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "A498UJaKXq",
+          "title": "D2 PARA D1",
+          "position": "-0.7321632575148631,-248.5656964707491,312.85739259226125",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D1.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        },
+        {
+          "hotspotid": "VWeHgoH6Hn",
+          "title": "D2 PARA N2",
+          "position": "265.26523185860117,-162.67413916720625,250.1632748812594",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N2.jpg"
+            }
+          ],
+          "icon": "SOLPRETO.png"
+        }
+      ]
+    },
+    {
+      "panofile": "N1.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "NR5w7n6NlG",
+          "title": "N1 PARA D1",
+          "position": "-197.1091763958168,84.76755260481632,-337.05965588281504",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D1.jpg"
+            }
+          ],
+          "icon": "LUAPRETA.png"
+        },
+        {
+          "hotspotid": "5tOyY5z797",
+          "title": "N1 PARA N2",
+          "position": "5.4407832575590245,-83.62995535413202,-390.47224981444003",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N2.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        }
+      ]
+    },
+    {
+      "panofile": "N2.jpg",
+      "hotspots": [
+        {
+          "hotspotid": "XCDLLr0ff2",
+          "title": "N2 PARA N1",
+          "position": "14.62465267849514,-200.78865588202734,344.7008777061081",
+          "actions": [
+            {
+              "type": 0,
+              "target": "N1.jpg"
+            }
+          ],
+          "icon": "chevronforward.png"
+        },
+        {
+          "hotspotid": "ujOnpAHP0X",
+          "title": "N2 PARA D2",
+          "position": "268.5376198072522,-159.28298474031808,249.15857464633928",
+          "actions": [
+            {
+              "type": 0,
+              "target": "D2.jpg"
+            }
+          ],
+          "icon": "LUAPRETA.png"
+        }
+      ]
+    }
+  ],
+  "threedeescenes": [],
+  "settings": {
+    "description": "New 3Sixty Virtual Tour Project",
+    "loadingtext": "Loading...",
+    "firstpanorama": "D1.jpg"
+  }
+}
