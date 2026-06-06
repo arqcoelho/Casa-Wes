@@ -389,6 +389,9 @@
 	addHotspot('images/white.png', new THREE.Vector3(-17.156373956870855, -65.1766678809609, -393.50166861600974), () => {
 		switchPanorama('D3.jpg');
 	});
+	addHotspot('images/arrowleft.png', new THREE.Vector3(-210.85969812522202, -115.73664309035613, -318.46523510462566), () => {
+		switchPanorama('D4.jpg');
+	});
 }
 
 			if (panorama === 'N1.jpg') {
@@ -410,6 +413,9 @@
 	addHotspot('images/white.png', new THREE.Vector3(-20.68418391451682, -65.14645268062912, -393.3192091171602), () => {
 		switchPanorama('N3.jpg');
 	});
+	addHotspot('images/arrowleft.png', new THREE.Vector3(-193.83619175256683, -119.35763078466617, -328.43136024499), () => {
+		switchPanorama('N4.jpg');
+	});
 }
 
 			if (panorama === 'D3.jpg') {
@@ -419,6 +425,9 @@
 	addHotspot('images/SOLPRETO.png', new THREE.Vector3(-328.9291780241806, -144.75617559002117, 173.67822194674983), () => {
 		switchPanorama('N3.jpg');
 	});
+	addHotspot('images/arrowright.png', new THREE.Vector3(387.121313836602, -78.6764879088757, 56.09971281126175), () => {
+		switchPanorama('D4.jpg');
+	});
 }
 
 			if (panorama === 'N3.jpg') {
@@ -427,6 +436,33 @@
 	});
 	addHotspot('images/LUAPRETA.png', new THREE.Vector3(-328.7446806874067, -139.33335316763026, 178.45223723111008), () => {
 		switchPanorama('D3.jpg');
+	});
+	addHotspot('images/arrowright.png', new THREE.Vector3(388.3084270906469, -84.28775166972571, 42.25202163249552), () => {
+		switchPanorama('N4.jpg');
+	});
+}
+
+			if (panorama === 'D4.jpg') {
+				addHotspot('images/SOLPRETO.png', new THREE.Vector3(-183.26437864850877, -221.77307748110658, -276.6869442327725), () => {
+		switchPanorama('N4.jpg');
+	});
+	addHotspot('images/arrowright.png', new THREE.Vector3(-309.5876828789861, -221.59016167783642, -119.86591907645568), () => {
+		switchPanorama('D2.jpg');
+	});
+	addHotspot('images/arrowleft.png', new THREE.Vector3(-274.6873816495223, -204.87256646970934, 205.50128672233598), () => {
+		switchPanorama('D3.jpg');
+	});
+}
+
+			if (panorama === 'N4.jpg') {
+				addHotspot('images/arrowright.png', new THREE.Vector3(-312.5049005661872, -227.3743797146147, -101.84651806135582), () => {
+		switchPanorama('N2.jpg');
+	});
+	addHotspot('images/arrowleft.png', new THREE.Vector3(-263.4486313563732, -218.3389738954209, 205.6680917418489), () => {
+		switchPanorama('N3.jpg');
+	});
+	addHotspot('images/LUAPRETA.png', new THREE.Vector3(-185.23223595553642, -216.57130402930133, -279.56392474289123), () => {
+		switchPanorama('D4.jpg');
 	});
 }
 
